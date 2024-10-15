@@ -2,24 +2,32 @@
 
 # Check if we have the right number of arguments
 # Usage:
-# tzconvert <zone> <time>
+# tzconvert <to_zone> <time> [<from_zone>]
 #
-if [[ $# -ne 2 ]]; then
-    echo "Usage: $0 TIME TIMEZONE"
+if [[ $# -lt 2 ]]; then
+    echo "Usage: $0 FROM_TIMEZONE TIME [TO_TIMEZONE]"
     exit 1
 fi
 
+TO_TZ="$1"
 TIME="$2"
-FROM_TZ="$1"
+FROM_TZ="$3"
 
 # Get the local timezone by resolving the /etc/localtime symlink
-LOCAL_TZ=$(readlink /etc/localtime | sed "s|/usr/share/zoneinfo/||")
+LOCAL_TZ=$(readlink /etc/localtime | sed "s|/usr/share/zoneinfo/||" |  sed 's|^\.*||')
 
-# Combine the given time and timezone into a full datetime string (use today's date)
+# Combine the given time and from timezone into a full datetime string (use today's date)
 DATETIME=$(date +"%Y-%m-%d")T"$TIME"
 
-# Convert the time from the given timezone to the local timezone
-converted_time=$(TZ="$FROM_TZ" date -d "$DATETIME" +"%Y-%m-%d %H:%M %Z")
-local_time=$(TZ="$LOCAL_TZ" date -d "$converted_time" +"%Y-%m-%d %H:%M %Z")
+if [[ -z "$FROM_TZ" ]]; then
+    FROM_TZ="$LOCAL_TZ"
+fi
 
+# Convert the time from the given from timezone to UTC
+converted_to_utc=$(TZ="$FROM_TZ" date -d "$DATETIME" +"%Y-%m-%d %H:%M %Z")
+
+# Convert the time from UTC to the destination timezone
+local_time=$(TZ="$TO_TZ" date -d "$converted_to_utc" +"%Y-%m-%d %H:%M %Z")
+
+# Print the converted local time in the destination timezone
 echo "$local_time"
