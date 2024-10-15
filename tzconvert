@@ -1,0 +1,25 @@
+#!/bin/bash
+
+# Check if we have the right number of arguments
+# Usage:
+# tzconvert <zone> <time>
+#
+if [[ $# -ne 2 ]]; then
+    echo "Usage: $0 TIME TIMEZONE"
+    exit 1
+fi
+
+TIME="$2"
+FROM_TZ="$1"
+
+# Get the local timezone by resolving the /etc/localtime symlink
+LOCAL_TZ=$(readlink /etc/localtime | sed "s|/usr/share/zoneinfo/||")
+
+# Combine the given time and timezone into a full datetime string (use today's date)
+DATETIME=$(date +"%Y-%m-%d")T"$TIME"
+
+# Convert the time from the given timezone to the local timezone
+converted_time=$(TZ="$FROM_TZ" date -d "$DATETIME" +"%Y-%m-%d %H:%M %Z")
+local_time=$(TZ="$LOCAL_TZ" date -d "$converted_time" +"%Y-%m-%d %H:%M %Z")
+
+echo "$local_time"

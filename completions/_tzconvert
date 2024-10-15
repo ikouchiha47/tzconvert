@@ -1,0 +1,14 @@
+#compdef tzconvert
+
+_tzcomplete() {
+  local tzdir="/usr/share/zoneinfo"
+  
+  # List available timezones by finding files under /usr/share/zoneinfo
+  local timezones=($(find /usr/share/zoneinfo/ -type f  -exec file {} + | grep 'timezone data (fat)' | awk -F':' '{print $1}' | sed "s|$tzdir/||"))
+
+  # Autocomplete the second argument (timezone)
+  _describe 'timezone' timezones
+}
+
+# Register the completion function for tzconvert
+compdef _tzcomplete tzconvert
